@@ -1,0 +1,17 @@
+{
+  "name": "eslint-docs-parser",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "generate": "node src/index.js && yarn prettify",
+    "prettify": "prettier --config .prettierrc.json --write rules.js"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.6",
+    "prettier": "^1.15.2"
+  },
+  "dependencies": {
+    "jsdom": "^13.0.0",
+    "request": "^2.88.0"
+  }
+}
