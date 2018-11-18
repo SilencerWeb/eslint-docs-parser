@@ -22,7 +22,7 @@ const runScript = async() => {
 
   let index = 1;
 
-  await Promise.all(rules.map(async(rule) => {
+  await Promise.all(rules.map(async(rule, i) => {
     console.log(`(${index}/${rules.length}) Starting to fetch data for a rule...`);
 
     const rulePageResponse = await axios.get(`https://eslint.org/docs/rules/${rule.querySelector('td p a').textContent}`);
@@ -35,6 +35,7 @@ const runScript = async() => {
     const incorrectExampleSelector = rulePageDom.window.document.querySelector('.incorrect + .language-js code');
 
     const parsedRule = {
+      index: i, // We need it for sorting, after this we will get rid of it
       name: nameSelector && nameSelector.textContent,
       value: 'warn',
       shortDescription: shortDescriptionSelector && prettifyShortDescription(shortDescriptionSelector.textContent),
@@ -43,7 +44,7 @@ const runScript = async() => {
         correct: correctExampleSelector ? prettifyCodeExampleString(correctExampleSelector.innerHTML) : 'No example :(',
         incorrect: incorrectExampleSelector ? prettifyCodeExampleString(incorrectExampleSelector.innerHTML) : 'No example :(',
       },
-      isActive: index === 1, // First element should be active
+      isActive: i === 1, // First element should be active
       isRecommended: !!rule.querySelector('span[title="recommended"]'),
       isFixable: !!rule.querySelector('span[title="fixable"]'),
       isTurnedOn: false,
@@ -76,7 +77,15 @@ const runScript = async() => {
     index++;
   }));
 
-  fs.writeFile('rules.js', 'export const rules = ' + JSON.stringify(parsedRules), function (error) {
+  const sortedParsedRules = parsedRules.sort((rule1, rule2) => rule1.index - rule2.index).map((rule) => {
+    rule = { ...rule };
+
+    delete rule.index;
+
+    return rule;
+  });
+
+  fs.writeFile('rules.js', 'export const rules = ' + JSON.stringify(sortedParsedRules), function (error) {
     if (error) {
       throw new Error(error.message);
     }
