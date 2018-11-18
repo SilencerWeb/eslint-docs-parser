@@ -15,7 +15,7 @@ const runScript = async() => {
 
   const parsedRules = [];
 
-  const ruleLists = [...rulesPageDOM.window.document.querySelectorAll('.rule-list')].splice(0, 6); // We don't need two latest lists: list of deprecated rules and list of removed rules
+  const ruleLists = [...rulesPageDOM.window.document.querySelectorAll('.rule-list')].splice(0, 7); // We don't need two latest lists: list of deprecated rules and list of removed rules
   const rules = [];
 
   ruleLists.forEach((ruleList) => rules.push(...ruleList.querySelectorAll('tr')));
@@ -23,8 +23,6 @@ const runScript = async() => {
   let index = 1;
 
   await Promise.all(rules.map(async(rule, i) => {
-    console.log(`(${index}/${rules.length}) Starting to fetch data for a rule...`);
-
     const rulePageResponse = await axios.get(`https://eslint.org/docs/rules/${rule.querySelector('td p a').textContent}`);
     const rulePageDom = new JSDOM(rulePageResponse.data);
 
