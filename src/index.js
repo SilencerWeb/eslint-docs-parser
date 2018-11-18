@@ -18,16 +18,48 @@ const runScript = async() => {
   const ruleLists = [...rulesPageDOM.window.document.querySelectorAll('.rule-list')].splice(0, 7); // We don't need two latest lists: list of deprecated rules and list of removed rules
   const rules = [];
 
-  ruleLists.forEach((ruleList) => rules.push(...ruleList.querySelectorAll('tr')));
+  ruleLists.forEach((ruleList, i) => {
+    const DOMRules = [...ruleList.querySelectorAll('tr')];
+
+    let category = null;
+    switch (i) {
+      case 0:
+        category = 'Possible Errors';
+        break;
+      case 1:
+        category = 'Best Practices';
+        break;
+      case 2 :
+        category = 'Strict Mode';
+        break;
+      case 3:
+        category = 'Variables';
+        break;
+      case 4:
+        category = 'Node.js and CommonJS';
+        break;
+      case 5:
+        category = 'Stylistic Issues';
+        break;
+      case 6:
+        category = 'ECMAScript 6';
+        break;
+    }
+
+    rules.push(...DOMRules.map((DOMRule) => ({
+      category: category,
+      element: DOMRule,
+    })));
+  });
 
   let index = 1;
 
   await Promise.all(rules.map(async(rule, i) => {
-    const rulePageResponse = await axios.get(`https://eslint.org/docs/rules/${rule.querySelector('td p a').textContent}`);
+    const rulePageResponse = await axios.get(`https://eslint.org/docs/rules/${rule.element.querySelector('td p a').textContent}`);
     const rulePageDom = new JSDOM(rulePageResponse.data);
 
-    const nameSelector = rule.querySelector('td p a');
-    const shortDescriptionSelector = rule.querySelector('td:last-child p');
+    const nameSelector = rule.element.querySelector('td p a');
+    const shortDescriptionSelector = rule.element.querySelector('td:last-child p');
     const longDescriptionSelector = rulePageDom.window.document.querySelector('#rule-details + p');
     const correctExampleSelector = rulePageDom.window.document.querySelector('.correct + .language-js code');
     const incorrectExampleSelector = rulePageDom.window.document.querySelector('.incorrect + .language-js code');
@@ -36,6 +68,7 @@ const runScript = async() => {
       index: i, // We need it for sorting, after this we will get rid of it
       name: nameSelector && nameSelector.textContent,
       value: 'warn',
+      category: rule.category,
       shortDescription: shortDescriptionSelector && prettifyShortDescription(shortDescriptionSelector.textContent),
       longDescription: longDescriptionSelector && prettifyLongDescription(longDescriptionSelector.textContent),
       examples: {
@@ -43,8 +76,8 @@ const runScript = async() => {
         incorrect: incorrectExampleSelector ? prettifyCodeExampleString(incorrectExampleSelector.innerHTML) : 'No example :(',
       },
       isActive: i === 1, // First element should be active
-      isRecommended: !!rule.querySelector('span[title="recommended"]'),
-      isFixable: !!rule.querySelector('span[title="fixable"]'),
+      isRecommended: !!rule.element.querySelector('span[title="recommended"]'),
+      isFixable: !!rule.element.querySelector('span[title="fixable"]'),
       isTurnedOn: false,
     };
 
