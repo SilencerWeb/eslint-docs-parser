@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "eslint": "^5.9.0",
     "jsdom": "^13.0.0"
   }
 }
